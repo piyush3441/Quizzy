@@ -1,4 +1,76 @@
 package com.example.pwassignment.features.auth_feature
 
-class AuthFeatureViewmodel {
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import com.example.pwassignment.features.auth_feature.state.AuthState
+import com.example.pwassignment.features.auth_feature.state.LoginFormState
+import com.google.firebase.auth.FirebaseAuth
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import javax.inject.Inject
+
+@HiltViewModel
+class AuthFeatureViewmodel @Inject constructor(
+    private val firebaseAuth: FirebaseAuth
+) : ViewModel() {
+
+    private val _loginFormState = MutableStateFlow(LoginFormState())
+    val loginFormState: StateFlow<LoginFormState> = _loginFormState
+
+    private val _authState = mutableStateOf(AuthState())
+    val authState: State<AuthState> = _authState
+
+    fun onEmailChange(value: String) {
+        _loginFormState.value = _loginFormState.value.copy(email = value)
+    }
+
+    fun onPasswordChange(value: String) {
+        _loginFormState.value = _loginFormState.value.copy(password = value)
+    }
+
+
+    fun login(
+        email: String,
+        password: String,
+        onResult: (Boolean, String?, String?) -> Unit
+    ) {
+
+        firebaseAuth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isComplete) {
+                    _authState.value = authState.value.copy(
+                        isLoading = false
+                    )
+                }
+
+                if (task.isSuccessful) {
+                    // Fetch ID Token
+                    firebaseAuth.currentUser?.getIdToken(true)
+                        ?.addOnCompleteListener { tokenTask ->
+                            if (tokenTask.isSuccessful) {
+                                val token = tokenTask.result?.token
+                                _authState.value = authState.value.copy(
+                                    token = token
+                                )
+                                onResult(true, null, token) // success + token
+                            } else {
+                                onResult(false, tokenTask.exception?.message, null)
+                            }
+                        }
+
+                } else {
+                    _authState.value = authState.value.copy(
+                        error = task.exception?.message ?: "Unknown error occurred"
+                    )
+                    onResult(false, task.exception?.message, null)
+                }
+            }
+    }
+
+    fun logout() {
+        firebaseAuth.signOut()
+    }
+
 }

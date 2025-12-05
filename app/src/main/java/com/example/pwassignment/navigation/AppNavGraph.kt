@@ -76,13 +76,7 @@ fun NavGraphBuilder.appNavGraph(
             ) { innerPadding ->
                 NotificationAndSettingsScreen(
                     modifier = Modifier.padding(innerPadding),
-                    onLogout = {
-                        navController.navigate(Graph.AuthGraph.route) {
-                            popUpTo(Graph.AppGraph.route) {
-                                inclusive = true
-                            }
-                        }
-                    }
+                    navController = navController
                 )
             }
 

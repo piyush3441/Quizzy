@@ -5,6 +5,7 @@ import com.example.pwassignment.data.remote.QuizzyApi
 import com.example.pwassignment.data.repository.StudentDashboardRepositoryImpl
 import com.example.pwassignment.domain.repository.StudentDashboardRepository
 import com.example.pwassignment.utils.AppConstants
+import com.google.firebase.auth.FirebaseAuth
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -56,4 +57,12 @@ class AppModule() {
     fun provideStudentDashboardRepository(api: QuizzyApi): StudentDashboardRepository {
         return StudentDashboardRepositoryImpl(api)
     }
+
+    @Provides
+    @Singleton
+    fun provideFirebaseAuth(): FirebaseAuth {
+        return FirebaseAuth.getInstance()
+    }
+
+
 }

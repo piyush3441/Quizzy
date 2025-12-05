@@ -7,7 +7,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults.InputField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -27,10 +29,14 @@ fun SignInCard(
             .padding(horizontal = 20.dp, vertical = 30.dp)
     ) {
 
-        Column {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
                 text = "Let’s Get you Signed in",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
 
             Spacer(modifier = Modifier.height(18.dp))
@@ -50,6 +56,8 @@ fun SignInCard(
                 onChange = onStudentIdChange,
                 modifier = Modifier.fillMaxWidth()
             )
+
+            Spacer(modifier = Modifier.padding(vertical = 20.dp))
         }
     }
 }

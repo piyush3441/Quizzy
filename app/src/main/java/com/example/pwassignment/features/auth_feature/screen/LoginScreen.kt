@@ -1,5 +1,7 @@
 package com.example.pwassignment.features.auth_feature.screen
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,31 +19,35 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.pwassignment.Graph
 import com.example.pwassignment.R
 import com.example.pwassignment.Screen
+import com.example.pwassignment.features.auth_feature.AuthFeatureViewmodel
 import com.example.pwassignment.features.auth_feature.components.AvatarRow
 import com.example.pwassignment.features.auth_feature.components.SignInCard
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    navController: NavController
+    navController: NavController,
+    viewmodel: AuthFeatureViewmodel = hiltViewModel()
 ) {
-    var schoolId by remember { mutableStateOf("") }
-    var studentId by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
     Box(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .background(color = Color.Black)
     ) {
 
-//        Image(
-//            painter = painterResource(R.drawable.bg_doodles),
-//            contentDescription = null,
-//            modifier = Modifier.fillMaxSize()
-//        )
 
         Column(
             modifier = Modifier
@@ -50,48 +57,71 @@ fun LoginScreen(
         ) {
 
             AvatarRow(
-                topAvatar1 = R.drawable.avatar_1,
-                topAvatar2 = R.drawable.avatar_2,
-                bottomAvatar = R.drawable.avatar_3
+                topAvatar1 = R.drawable.student_png,
+                topAvatar2 = R.drawable.student_avatar,
+                bottomAvatar = R.drawable.girl_student
             )
 
             Spacer(Modifier.height(30.dp))
 
             Text(
                 "Welcome to",
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.displaySmall,
+                color = Color.White
             )
             Text(
                 "Quizzy!",
-                style = MaterialTheme.typography.headlineLarge
+                style = MaterialTheme.typography.displayMedium,
+                color = Color.White
             )
 
             Spacer(Modifier.weight(1f))
 
+
+
             SignInCard(
-                schoolId = schoolId,
-                studentId = studentId,
-                onSchoolIdChange = { schoolId = it },
-                onStudentIdChange = { studentId = it }
+                schoolId = email,
+                studentId = password,
+                onSchoolIdChange = {
+                    email = it
+                    viewmodel.onEmailChange(it)
+                },
+                onStudentIdChange = {
+                    password = it
+                    viewmodel.onPasswordChange(it)
+                }
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Button(
+            TextButton(
                 onClick = {
-                    // will do something
-                    navController.navigate(Graph.AppGraph.route) {
-                        popUpTo(Graph.AuthGraph.route) {
-                            inclusive = true
+                    if (email.isNotBlank() && password.isNotBlank()) {
+                        viewmodel.login(email, password) { success, error, token ->
+                            if (success) {
+                                navController.navigate(Graph.AppGraph.route) {
+                                    popUpTo(Graph.AuthGraph.route) {
+                                        inclusive = true
+                                    }
+                                }
+                            } else {
+                                // show error using Snackbar or Toast
+                                println("Some Error Occurred: $error")
+                            }
                         }
                     }
+                    // will do something
+
                 },
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .padding(bottom = 10.dp)
             ) {
                 Text(
-                    text = "SignIn"
+                    text = "SignIn",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }

@@ -11,14 +11,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.example.pwassignment.Graph
 import com.example.pwassignment.R
+import com.example.pwassignment.features.auth_feature.AuthFeatureViewmodel
 import com.example.pwassignment.features.home.components.NotificationCard
 import com.example.pwassignment.features.home.components.SettingRow
 
 @Composable
 fun NotificationAndSettingsScreen(
     modifier: Modifier = Modifier,
-    onLogout: () -> Unit
+    navController : NavController,
+    viewmodel: AuthFeatureViewmodel = hiltViewModel()
 ) {
     Column(
         modifier = modifier
@@ -88,7 +93,14 @@ fun NotificationAndSettingsScreen(
             icon = R.drawable.log_out_icon,
             title = "Logout",
             subtitle = "Sign out of your account",
-            onClick = { onLogout() }
+            onClick = {
+                viewmodel.logout()
+                navController.navigate(Graph.AuthGraph.route) {
+                    popUpTo(Graph.AppGraph.route) {
+                        inclusive = true
+                    }
+                }
+            }
         )
     }
 }
