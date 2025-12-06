@@ -83,6 +83,8 @@ dependencies {
     //google fonts
     implementation(libs.androidx.compose.ui.googlefonts)
 
+    implementation(libs.compose.material.icons)
+
     //firebase for authentication
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)

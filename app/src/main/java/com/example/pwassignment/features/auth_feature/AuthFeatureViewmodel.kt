@@ -9,6 +9,7 @@ import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,11 +24,25 @@ class AuthFeatureViewmodel @Inject constructor(
     val authState: State<AuthState> = _authState
 
     fun onEmailChange(value: String) {
-        _loginFormState.value = _loginFormState.value.copy(email = value)
+        _loginFormState.update { currentState ->
+            val usernameError = LoginUtils.validateUsername(value)
+            currentState.copy(
+                email = value,
+                emailError = usernameError,
+                isFormValid = (usernameError == null) && (currentState.passwordError == null)
+            )
+        }
     }
 
     fun onPasswordChange(value: String) {
-        _loginFormState.value = _loginFormState.value.copy(password = value)
+        _loginFormState.update { currentState ->
+            val passwordError = LoginUtils.validatePassword(value)
+            currentState.copy(
+                password = value,
+                passwordError = passwordError,
+                isFormValid = (passwordError == null) && (currentState.passwordError == null)
+            )
+        }
     }
 
 
@@ -37,36 +52,44 @@ class AuthFeatureViewmodel @Inject constructor(
         onResult: (Boolean, String?, String?) -> Unit
     ) {
 
-        firebaseAuth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isComplete) {
-                    _authState.value = authState.value.copy(
-                        isLoading = false
-                    )
-                }
+        val currentFormState = _loginFormState.value
 
-                if (task.isSuccessful) {
-                    // Fetch ID Token
-                    firebaseAuth.currentUser?.getIdToken(true)
-                        ?.addOnCompleteListener { tokenTask ->
-                            if (tokenTask.isSuccessful) {
-                                val token = tokenTask.result?.token
-                                _authState.value = authState.value.copy(
-                                    token = token
-                                )
-                                onResult(true, null, token) // success + token
-                            } else {
-                                onResult(false, tokenTask.exception?.message, null)
+        if (currentFormState.isFormValid) {
+            firebaseAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener { task ->
+                    if (task.isComplete) {
+                        _authState.value = authState.value.copy(
+                            isLoading = false
+                        )
+                    }
+
+                    if (task.isSuccessful) {
+                        // Fetch ID Token
+                        firebaseAuth.currentUser?.getIdToken(true)
+                            ?.addOnCompleteListener { tokenTask ->
+                                if (tokenTask.isSuccessful) {
+                                    val token = tokenTask.result?.token
+                                    _authState.value = authState.value.copy(
+                                        token = token
+                                    )
+                                    onResult(true, null, token) // success + token
+                                } else {
+                                    onResult(false, tokenTask.exception?.message, null)
+                                }
                             }
-                        }
 
-                } else {
-                    _authState.value = authState.value.copy(
-                        error = task.exception?.message ?: "Unknown error occurred"
-                    )
-                    onResult(false, task.exception?.message, null)
+                    } else {
+                        _authState.value = authState.value.copy(
+                            error = task.exception?.message ?: "Unknown error occurred"
+                        )
+                        onResult(false, task.exception?.message, null)
+                    }
                 }
-            }
+        } else {
+            onEmailChange(currentFormState.email)
+            onPasswordChange(currentFormState.password)
+        }
+
     }
 
     fun logout() {

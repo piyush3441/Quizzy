@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,6 +42,8 @@ fun LoginScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    val loginFormState by viewmodel.loginFormState.collectAsState()
 
     Box(
         modifier = modifier
@@ -80,38 +83,38 @@ fun LoginScreen(
 
 
             SignInCard(
-                schoolId = email,
-                studentId = password,
-                onSchoolIdChange = {
+                email = email,
+                password = password,
+                onEmailChanged = {
                     email = it
                     viewmodel.onEmailChange(it)
                 },
-                onStudentIdChange = {
+                onPasswordChanged = {
                     password = it
                     viewmodel.onPasswordChange(it)
-                }
+                },
+                emailError = loginFormState.emailError != null,
+                passwordError = loginFormState.passwordError != null,
+                emailSupportingText = if (loginFormState.emailError != null) loginFormState.emailError!! else "",
+                passwordSupportingText = if (loginFormState.passwordError != null) loginFormState.passwordError!! else ""
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
             TextButton(
                 onClick = {
-                    if (email.isNotBlank() && password.isNotBlank()) {
-                        viewmodel.login(email, password) { success, error, token ->
-                            if (success) {
-                                navController.navigate(Graph.AppGraph.route) {
-                                    popUpTo(Graph.AuthGraph.route) {
-                                        inclusive = true
-                                    }
+                    viewmodel.login(email, password) { success, error, token ->
+                        if (success) {
+                            navController.navigate(Graph.AppGraph.route) {
+                                popUpTo(Graph.AuthGraph.route) {
+                                    inclusive = true
                                 }
-                            } else {
-                                // show error using Snackbar or Toast
-                                println("Some Error Occurred: $error")
                             }
+                        } else {
+                            // show error using Snackbar or Toast
+                            println("Some Error Occurred: $error")
                         }
                     }
-                    // will do something
-
                 },
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
